@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Et si l'humanité arrêtait la viande ?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F4F0; --ink:#14211A; --ink2:#4A5A50; --ink3:#8A9A90;
+  --rule:#DCE2DA; --card:#FBFCFA; --eau:#1E6FA8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 22px 32px}
+
+h1{font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-weight:700;font-size:clamp(26px,4.2vw,42px);line-height:1.05;letter-spacing:-.02em;max-width:18ch}
+.sub{color:var(--ink2);margin-top:8px;max-width:56ch}
+
+.temps{display:flex;align-items:center;gap:20px;margin:30px 0 22px;flex-wrap:wrap}
+.annee{font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-weight:700;font-size:clamp(40px,7vw,66px);line-height:1;font-variant-numeric:tabular-nums;min-width:3.4ch}
+.temps input{flex:1;min-width:220px}
+
+button{font:600 14px Inter,sans-serif;padding:9px 18px;border-radius:99px;cursor:pointer;
+  background:var(--ink);color:var(--bg);border:none;transition:opacity .15s}
+button:hover{opacity:.82}
+button:focus-visible,input:focus-visible{outline:2px solid #2E6B2A;outline-offset:3px}
+
+input[type=range]{appearance:none;height:4px;border-radius:2px;width:100%;cursor:pointer;
+  background:linear-gradient(90deg,var(--ink) var(--f,0%),var(--rule) var(--f,0%))}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:24px;height:24px;border-radius:50%;
+  background:var(--ink);border:4px solid var(--bg);box-shadow:0 0 0 1px var(--rule)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+  background:var(--ink);border:4px solid var(--bg);box-shadow:0 0 0 1px var(--rule)}
+
+.duo{display:grid;grid-template-columns:1.45fr 1fr;gap:16px}
+@media(max-width:860px){.duo{grid-template-columns:1fr}}
+.panneau{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px 18px;position:relative}
+.panneau h2{font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-size:15px;font-weight:500;color:var(--ink2);margin-bottom:6px}
+
+//legende + chiffres
+.leg{margin-bottom:12px;font-size:11px;color:var(--ink2);max-width:420px}
+.leg-note{margin-top:8px;color:var(--ink3);font-size:10.5px;line-height:1.4}
+.ticks b{color:var(--ink2);font-weight:600}
+.leg-h{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:5px}
+.bar{height:15px;border-radius:2px;border:1px solid var(--rule)}
+.grads{display:flex;height:5px;margin-top:1px}
+.grads span{flex:1;border-left:1px solid var(--rule)}
+.grads span:first-child{border-left:none}
+.ticks{display:flex;justify-content:space-between;margin-top:3px;font-size:10px;color:var(--ink3)}
+.leg-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.leg-row .bar{flex:1}
+.leg-tag{width:62px;font-size:10.5px;line-height:1.15;color:var(--ink3);flex:none}
+.hatchkey{width:16px;height:11px;border:1px solid var(--ink3);display:inline-block;flex:none;
+  background-image:repeating-linear-gradient(45deg,#fff 0 3px,#14211A 3px 4.2px)}
+.unikey{width:16px;height:11px;border:1px solid var(--ink3);display:inline-block;background:#fff}
+
+#map path{transition:fill .4s ease}
+#map path.p:hover{stroke:var(--ink);stroke-width:1.1}
+
+//infobulle
+.tip{position:fixed;pointer-events:none;z-index:50;opacity:0;transition:opacity .12s;
+  background:var(--ink);color:#F2F4F0;border-radius:10px;padding:10px 13px;
+  font-size:12px;line-height:1.45;max-width:250px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.tip.on{opacity:1}
+.tip h3{font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-size:14px;font-weight:700;
+  margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,.18)}
+.tip .r{display:flex;justify-content:space-between;gap:14px}
+.tip .r span{opacity:.72}
+.tip .r b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tip .r.hi b{color:#9FD98A}
+.tip .foot{margin-top:6px;padding-top:5px;border-top:1px solid rgba(255,255,255,.18);
+  font-size:10.5px;opacity:.62}
+@media(prefers-reduced-motion:reduce){#map path{transition:none}}
+
+.bulle{position:absolute;right:24px;bottom:24px;background:var(--eau);color:#fff;border-radius:50%;
+  width:116px;height:116px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;box-shadow:0 6px 20px rgba(30,111,168,.25);transition:transform .4s ease}
+.bulle-val{font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-weight:700;font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.bulle-lab{font-size:10px;line-height:1.25;margin-top:5px;padding:0 11px;opacity:.92}
+
+.cle{list-style:none;margin-top:10px;font-size:13px;color:var(--ink2)}
+.cle li{display:flex;align-items:flex-start;gap:8px;padding:5px 0}
+.cle small{display:block;font-size:10.5px;color:var(--ink3);line-height:1.3;margin-top:1px}
+.cle .sw{margin-top:4px}
+.cle b{margin-left:auto;font-family:Calibri,Carlito,'Segoe UI',sans-serif;font-size:16px;color:var(--ink);font-variant-numeric:tabular-nums}
+.sw{width:11px;height:11px;border-radius:3px;flex:none}
+.sw-evite{background:#3A7BC8}.sw-seq{background:#4E9B3E}
+
+.hypotheses{margin-top:18px;padding:16px 18px;border:1px dashed var(--rule);border-radius:14px}
+.hyp-titre{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:12px}
+.hyp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 26px}
+@media(max-width:640px){.hyp-grid{grid-template-columns:1fr}}
+.hyp-grid label{display:flex;justify-content:space-between;font-size:13px;color:var(--ink2);margin-bottom:6px}
+.hyp-grid output{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.scen{display:flex;gap:6px}
+.scen button{flex:1;background:transparent;color:var(--ink2);border:1px solid var(--rule);
+  padding:7px 4px;font-size:12.5px;font-weight:500;border-radius:9px}
+.scen button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.scen-note{font-size:11.5px;color:var(--ink2);margin-top:7px;line-height:1.4;font-weight:500}
+.scen-fixe{font-size:11px;color:var(--ink3);margin-top:5px;line-height:1.4}
+.scen-fixe b{font-weight:600;color:var(--ink2)}
+
+footer{margin-top:20px;padding-top:14px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink3);max-width:80ch}
+.src-t{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink2);margin-bottom:6px}
+.src{list-style:none;margin-bottom:10px}
+.src li{padding:1.5px 0}
+.src li span{color:var(--ink2);font-weight:600}
+.src li span::after{content:" : "}
+footer p+p{margin-top:5px}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <header>
+    <h1>Et si l'humanité arrêtait la viande&nbsp;?</h1>
+    <p class="sub">Hypothèse de fin de transition en 2050, selon le pourcentage
+       de la population ne mangeant plus de viande.</p>
+  </header>
+
+  <section class="temps">
+    <output class="annee" id="annee-out">2026</output>
+    <input type="range" id="annee" min="2026" max="2100" value="2026" step="1" aria-label="Année">
+    <button id="play">Lancer</button>
+  </section>
+
+  <section class="duo">
+    <div class="panneau">
+
+      <div class="leg">
+        <div class="leg-h">Devenir des pâturages</div>
+        <div class="bar" id="bar-etat"></div>
+        <div class="grads" id="grads"></div>
+        <div class="ticks">
+          <span>pâturé</span><span>libéré</span><span>végétation mature</span>
+        </div>
+        <p class="leg-note">
+          <span class="hatchkey"></span> Hachuré&nbsp;: forêt potentielle — repousse lente, fort stockage de carbone.<br>
+          <span class="unikey"></span> Uni&nbsp;: prairie native — repousse rapide, stockage faible.<br>
+          Plus un pays a de pâturages, plus sa couleur est saturée.</p>
+      </div>
+
+      <div id="map"></div>
+      <div class="tip" id="tip" role="tooltip" aria-live="polite"></div>
+      <div class="bulle" id="bulle">
+        <span class="bulle-val" id="eau-val">0&nbsp;%</span>
+        <span class="bulle-lab">de l'empreinte eau<br>agricole évitée <b>chaque année</b></span>
+      </div>
+    </div>
+
+    <div class="panneau">
+      <h2>Carbone cumulé depuis 2026</h2>
+      <div id="chart"></div>
+      <ul class="cle">
+        <li><i class="sw sw-evite"></i>
+          <span>Émissions brutes évitées
+            <small>Gaz à effet de serre que l'élevage n'émet plus. Brut&nbsp;: la production
+              végétale de substitution en annulerait une partie.</small></span>
+          <b id="c-evite">0 Gt</b></li>
+        <li><i class="sw sw-seq"></i>
+          <span>Carbone séquestré
+            <small>CO₂ absorbé par la végétation qui repousse sur les terres libérées.
+              Plafonne au total absorbable du scénario choisi.</small></span>
+          <b id="c-seq">0 Gt</b></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="hypotheses">
+    <p class="hyp-titre">Hypothèses du scénario</p>
+    <div class="hyp-grid">
+      <div>
+        <label for="ambition">Part de l'humanité sans viande <output id="ambition-out">100 %</output></label>
+        <input type="range" id="ambition" min="0" max="100" value="100" step="5">
+      </div>
+      <div>
+        <label>Hypothèse de repousse retenue</label>
+        <div class="scen" id="scen">
+          <button data-s="0">Prudent</button>
+          <button data-s="1" class="on">Central</button>
+          <button data-s="2">Optimiste</button>
+        </div>
+        <p class="scen-note" id="scen-note"></p>
+        <p class="scen-fixe">Le chiffre est le total absorbable une fois la végétation mûre&nbsp;;
+        la végétation n'y parvient pas avant la fin du siècle. Durées illustratives.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="src-t">Sources</p>
+    <ul class="src">
+      <li><span>Pâturages par pays</span> FAOSTAT (dernière année&nbsp;: <span id="annee-fao">…</span>)</li>
+      <li><span>Libération des terres</span> Poore &amp; Nemecek, <em>Science</em> (2018)</li>
+      <li><span>Séquestration et repousse</span> <em>PNAS</em> (2024)</li>
+      <li><span>Émissions de l'élevage</span> chiffres FAO</li>
+      <li><span>Eau</span> 29&nbsp;% de l'empreinte eau de l'agriculture mondiale —
+          Mekonnen &amp; Hoekstra, <em>Ecosystems</em> (2012)</li>
+      <li><span>Fond de carte</span> Natural Earth</li>
+    </ul>
+  </footer>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script>
+// Données pays (INDEX FRANCAIS IMPORTANT POUR COMPREHENSION)
+const EST={"United States of America":[27,"F"],"Canada":[15,"F"],"Mexico":[20,"G"],"Guatemala":[12,"F"],
+"Honduras":[12,"F"],"Nicaragua":[15,"F"],"Costa Rica":[15,"F"],"Panama":[15,"F"],"Cuba":[15,"F"],
+"Dominican Rep.":[12,"F"],"Haiti":[8,"F"],"Jamaica":[10,"F"],"Colombia":[22,"F"],"Venezuela":[22,"F"],
+"Ecuador":[12,"F"],"Peru":[12,"G"],"Brazil":[25,"F"],"Bolivia":[20,"G"],"Paraguay":[30,"F"],
+"Chile":[15,"G"],"Argentina":[30,"G"],"Uruguay":[30,"G"],"Guyana":[10,"F"],"Suriname":[8,"F"],
+"Iceland":[15,"G"],"Norway":[8,"F"],"Sweden":[8,"F"],"Finland":[8,"F"],"Denmark":[20,"F"],
+"United Kingdom":[30,"F"],"Ireland":[35,"F"],"Netherlands":[25,"F"],"Belgium":[25,"F"],
+"France":[25,"F"],"Germany":[20,"F"],"Switzerland":[25,"F"],"Austria":[20,"F"],"Portugal":[18,"F"],
+"Spain":[20,"F"],"Italy":[18,"F"],"Poland":[18,"F"],"Czechia":[12,"F"],"Slovakia":[10,"F"],
+"Hungary":[12,"F"],"Slovenia":[12,"F"],"Croatia":[12,"F"],"Bosnia and Herz.":[10,"F"],
+"Serbia":[12,"F"],"Romania":[15,"F"],"Bulgaria":[12,"F"],"Greece":[15,"F"],"Albania":[10,"F"],
+"Macedonia":[10,"F"],"Ukraine":[10,"G"],"Belarus":[12,"F"],"Lithuania":[10,"F"],"Latvia":[10,"F"],
+"Estonia":[8,"F"],"Moldova":[8,"G"],"Russia":[15,"F"],"Kazakhstan":[20,"G"],"Mongolia":[30,"G"],
+"Uzbekistan":[8,"G"],"Turkmenistan":[8,"G"],"Kyrgyzstan":[10,"G"],"Tajikistan":[8,"G"],
+"Turkey":[12,"F"],"Georgia":[12,"F"],"Armenia":[12,"G"],"Azerbaijan":[10,"G"],"Syria":[10,"G"],
+"Lebanon":[8,"F"],"Israel":[10,"G"],"Jordan":[8,"G"],"Iraq":[6,"G"],"Iran":[10,"G"],
+"Saudi Arabia":[15,"G"],"Yemen":[10,"G"],"Oman":[8,"G"],"United Arab Emirates":[6,"G"],
+"Kuwait":[5,"G"],"Qatar":[5,"G"],"Afghanistan":[12,"G"],"Pakistan":[5,"G"],"India":[8,"F"],
+"Nepal":[8,"F"],"Bangladesh":[4,"F"],"Sri Lanka":[6,"F"],"Myanmar":[6,"F"],"Thailand":[8,"F"],
+"Laos":[6,"F"],"Vietnam":[8,"F"],"Cambodia":[6,"F"],"Malaysia":[5,"F"],"Indonesia":[6,"F"],
+"Philippines":[6,"F"],"China":[15,"G"],"Taiwan":[6,"F"],"South Korea":[6,"F"],"North Korea":[5,"F"],
+"Japan":[8,"F"],"Australia":[25,"G"],"New Zealand":[40,"F"],"Papua New Guinea":[5,"F"],
+"Morocco":[12,"G"],"Algeria":[8,"G"],"Tunisia":[10,"G"],"Libya":[8,"G"],"Egypt":[5,"G"],
+"Sudan":[12,"G"],"S. Sudan":[10,"G"],"Ethiopia":[10,"F"],"Eritrea":[12,"G"],"Somalia":[30,"G"],
+"Kenya":[15,"G"],"Tanzania":[12,"F"],"Uganda":[10,"F"],"Rwanda":[8,"F"],"Burundi":[8,"F"],
+"Dem. Rep. Congo":[5,"F"],"Congo":[6,"F"],"Gabon":[6,"F"],"Cameroon":[6,"F"],"Nigeria":[10,"F"],
+"Niger":[10,"G"],"Mali":[10,"G"],"Mauritania":[20,"G"],"Senegal":[10,"G"],"Gambia":[10,"G"],
+"Ghana":[10,"F"],"Côte d'Ivoire":[10,"F"],"Burkina Faso":[10,"G"],"Chad":[15,"G"],
+"Central African Rep.":[5,"F"],"Angola":[15,"F"],"Zambia":[12,"F"],"Zimbabwe":[15,"G"],
+"Mozambique":[12,"F"],"Malawi":[10,"F"],"Madagascar":[15,"F"],"Botswana":[30,"G"],
+"Namibia":[30,"G"],"South Africa":[25,"G"],"Lesotho":[20,"G"],"eSwatini":[15,"G"]};
+
+// Noms FR  - here we go
+const FR={"Afghanistan":"Afghanistan","Albania":"Albanie","Algeria":"Algérie","Angola":"Angola",
+"Argentina":"Argentine","Armenia":"Arménie","Australia":"Australie","Austria":"Autriche",
+"Azerbaijan":"Azerbaïdjan","Bahamas":"Bahamas","Bangladesh":"Bangladesh","Belarus":"Biélorussie",
+"Belgium":"Belgique","Belize":"Belize","Benin":"Bénin","Bhutan":"Bhoutan","Bolivia":"Bolivie",
+"Bosnia and Herz.":"Bosnie-Herzégovine","Botswana":"Botswana","Brazil":"Brésil","Brunei":"Brunei",
+"Bulgaria":"Bulgarie","Burkina Faso":"Burkina Faso","Burundi":"Burundi","Cambodia":"Cambodge",
+"Cameroon":"Cameroun","Canada":"Canada","Central African Rep.":"République centrafricaine",
+"Chad":"Tchad","Chile":"Chili","China":"Chine","Colombia":"Colombie","Congo":"Congo",
+"Costa Rica":"Costa Rica","Croatia":"Croatie","Cuba":"Cuba","Cyprus":"Chypre","Czechia":"Tchéquie",
+"Dem. Rep. Congo":"République démocratique du Congo","Denmark":"Danemark","Djibouti":"Djibouti",
+"Dominican Rep.":"République dominicaine","East Timor":"Timor oriental","Ecuador":"Équateur",
+"Egypt":"Égypte","El Salvador":"Salvador","Eq. Guinea":"Guinée équatoriale","Eritrea":"Érythrée",
+"Estonia":"Estonie","eSwatini":"Eswatini","Ethiopia":"Éthiopie","Falkland Is.":"Îles Malouines",
+"Fiji":"Fidji","Finland":"Finlande","France":"France","Fr. S. Antarctic Lands":"Terres australes françaises",
+"Gabon":"Gabon","Gambia":"Gambie","Georgia":"Géorgie","Germany":"Allemagne","Ghana":"Ghana",
+"Greece":"Grèce","Greenland":"Groenland","Guatemala":"Guatemala","Guinea":"Guinée",
+"Guinea-Bissau":"Guinée-Bissau","Guyana":"Guyana","Haiti":"Haïti","Honduras":"Honduras",
+"Hungary":"Hongrie","Iceland":"Islande","India":"Inde","Indonesia":"Indonesie","Iran":"Iran",
+"Iraq":"Irak","Ireland":"Irlande","Israel":"Israël","Italy":"Italie","Jamaica":"Jamaïque",
+"Japan":"Japon","Jordan":"Jordanie","Kazakhstan":"Kazakhstan","Kenya":"Kenya","Kosovo":"Kosovo",
+"Kuwait":"Koweït","Kyrgyzstan":"Kirghizistan","Laos":"Laos","Latvia":"Lettonie","Lebanon":"Liban",
+"Lesotho":"Lesotho","Liberia":"Libéria","Libya":"Libye","Lithuania":"Lituanie",
+"Luxembourg":"Luxembourg","Macedonia":"Macédoine du Nord","Madagascar":"Madagascar",
+"Malawi":"Malawi","Malaysia":"Malaisie","Mali":"Mali","Mauritania":"Mauritanie","Mexico":"Mexique",
+"Moldova":"Moldavie","Mongolia":"Mongolie","Montenegro":"Monténégro","Morocco":"Maroc",
+"Mozambique":"Mozambique","Myanmar":"Birmanie","N. Cyprus":"Chypre du Nord","Namibia":"Namibie",
+"Nepal":"Népal","Netherlands":"Pays-Bas","New Caledonia":"Nouvelle-Calédonie",
+"New Zealand":"Nouvelle-Zélande","Nicaragua":"Nicaragua","Niger":"Niger","Nigeria":"Nigeria",
+"North Korea":"Corée du Nord","Norway":"Norvège","Oman":"Oman","Pakistan":"Pakistan",
+"Palestine":"Palestine","Panama":"Panama","Papua New Guinea":"Papouasie-Nouvelle-Guinée",
+"Paraguay":"Paraguay","Peru":"Pérou","Philippines":"Philippines","Poland":"Pologne",
+"Portugal":"Portugal","Puerto Rico":"Porto Rico","Qatar":"Qatar","Romania":"Roumanie",
+"Russia":"Russie","Rwanda":"Rwanda","S. Sudan":"Soudan du Sud","Saudi Arabia":"Arabie saoudite",
+"Senegal":"Sénégal","Serbia":"Serbie","Sierra Leone":"Sierra Leone","Slovakia":"Slovaquie",
+"Slovenia":"Slovénie","Solomon Is.":"Îles Salomon","Somalia":"Somalie","Somaliland":"Somaliland",
+"South Africa":"Afrique du Sud","South Korea":"Corée du Sud","Spain":"Espagne","Sri Lanka":"Sri Lanka",
+"Sudan":"Soudan","Suriname":"Suriname","Sweden":"Suède","Switzerland":"Suisse","Syria":"Syrie",
+"Taiwan":"Taiwan","Tajikistan":"Tadjikistan","Tanzania":"Tanzanie","Thailand":"Thaïlande",
+"Togo":"Togo","Trinidad and Tobago":"Trinité-et-Tobago","Tunisia":"Tunisie","Turkey":"Turquie",
+"Turkmenistan":"Turkmenistan","Uganda":"Ouganda","Ukraine":"Ukraine",
+"United Arab Emirates":"Émirats arabes unis","United Kingdom":"Royaume-Uni",
+"United States of America":"États-Unis","Uruguay":"Uruguay","Uzbekistan":"Ouzbékistan",
+"Vanuatu":"Vanuatu","Venezuela":"Venezuela","Vietnam":"Vietnam","W. Sahara":"Sahara occidental",
+"Yemen":"Yémen","Zambia":"Zambie","Zimbabwe":"Zimbabwe","Cote d'Ivoire":"Côte d'Ivoire"};
+
+// Quelques alias OWID
+const ALIAS={"United States":"United States of America","Democratic Republic of Congo":"Dem. Rep. Congo",
+"Cote d'Ivoire":"Côte d'Ivoire","Bosnia and Herzegovina":"Bosnia and Herz.",
+"Central African Republic":"Central African Rep.","Dominican Republic":"Dominican Rep.",
+"South Sudan":"S. Sudan","Equatorial Guinea":"Eq. Guinea","Solomon Islands":"Solomon Is.",
+"North Macedonia":"Macedonia","Eswatini":"eSwatini","Western Sahara":"W. Sahara",
+"Timor-Leste":"East Timor","Republic of the Congo":"Congo","Falkland Islands":"Falkland Is."};
+
+// PAT[pays] = % du territoire en pâturages permanents (FAOSTAT) 
+let PAT={};
+// CUL[pays] = % du territoire en terres cultivées (FAOSTAT), reste après transition 
+let CUL={};
+
+//modèle
+const AN0=2026, AN1=2100, FIN_TRANSITION=2050;
+// Hypothèses du modèle.
+// 6,2 GtCO2e/an (FAO 2023).
+// Les émissions évitées sont brutes : on ne modélise pas
+// les cultures de remplacement ici.
+const CO2_ELEVAGE=6.2, EAU_MAX=29;
+const TAU_PRAIRIE=12;   // TODO : vérifier si 12 reste cohérent   // la prairie native se reconstitue vite (mais stocke peu)
+
+const SCEN=[
+  {nom:"Prudent",  total:286, tau:60, note:"Repousse lente (~60 ans) — 286 GtCO₂ à terme."},
+  {nom:"Central",  total:445, tau:40, note:"Repousse moyenne (~40 ans) — 445 GtCO₂ à terme."},
+  {nom:"Optimiste",total:565, tau:25, note:"Repousse rapide (~25 ans) — 565 GtCO₂ à terme."}
+];
+let iScen=1; // scénario central par défaut
+
+// Deux trajectoires de couleur 
+const BRUN="#6B3D18", LIBERE="#B3CC97", MATURE="#1E5220";
+const NEUTRE="#EDEDE7", NODATA="#E9ECE7";
+const traj=d3.scaleLinear().domain([0,.5,1]).range([BRUN,LIBERE,MATURE])
+  .interpolate(d3.interpolateLab);
+
+//teinte = état d'avancement 
+function couleur(pct,s){
+  return d3.interpolateLab(NEUTRE,traj(s))(0.12+0.88*Math.min(1,pct/70));
+}
+
+// Légende couleur
+const N_PALIERS=8;
+function barreGraduee(sel,fn,n){
+  const st=[];
+  for(let i=0;i<n;i++){
+    const c=fn((i+.5)/(n-1>0?n:1));
+    st.push(`${c} ${i/n*100}%`,`${c} ${(i+1)/n*100}%`);
+  }
+  d3.select(sel).style("background",`linear-gradient(90deg,${st.join(",")})`);
+}
+barreGraduee("#bar-etat",s=>traj(Math.min(1,s)),N_PALIERS);
+d3.select("#grads").selectAll("span").data(d3.range(N_PALIERS)).join("span");
+
+// Carte monde ( à centrer ?)
+const W=620,H=340;
+const svg=d3.select("#map").append("svg")
+  .attr("viewBox",`0 0 ${W} ${H}`).attr("width","100%")
+  .attr("role","img").attr("aria-label","Carte mondiale du devenir des pâturages");
+
+const hp=svg.append("defs").append("pattern").attr("id","hatch")
+  .attr("width",6).attr("height",6).attr("patternUnits","userSpaceOnUse")
+  .attr("patternTransform","rotate(45)");
+hp.append("line").attr("x1",0).attr("y1",0).attr("x2",0).attr("y2",6)
+  .attr("stroke","#14211A").attr("stroke-width",1.1).attr("opacity",.45);
+
+const proj=d3.geoNaturalEarth1().scale(122).translate([W/2,H/2+12]);
+const geo=d3.geoPath(proj);
+let pays=null;
+
+const BASE="https://ourworldindata.org/grapher/";
+const OPT="?csvType=full&useColumnShortNames=false";
+const URL_PAT=BASE+"area-meadows-and-pastures.csv"+OPT;              // pâturages
+const URL_CUL=BASE+"share-of-land-area-used-for-arable-agriculture.csv"+OPT; // cultures
+
+// Récup dernière valeur
+function dernieres(csv,colonne){
+  const out={};
+  csv.forEach(function(r){
+    if(!r.Code || r.Code.indexOf("OWID")===0) return;   // exclut les agrégats FAO
+    const v=+r[colonne];
+    if(!isFinite(v)) return;
+    const nom=ALIAS[r.Entity]||r.Entity, an=+r.Year;
+    if(!out[nom] || an>out[nom].an) out[nom]={an:an,v:v};
+  });
+  return out;
+}
+
+Promise.all([
+  d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"),
+  d3.csv(URL_PAT),
+  d3.csv(URL_CUL).catch(function(){return null;})   // optionnel : la carte marche sans
+]).then(function(res){
+  var w=res[0];
+
+  const dP=dernieres(res[1],"Permanent meadows and pastures");
+  Object.keys(dP).forEach(function(n){ PAT[n]=dP[n].v; });
+  const ans=Object.keys(dP).map(function(k){return dP[k].an;});
+  if(ans.length) d3.select("#annee-fao").text(d3.max(ans));
+
+  if(res[2]){
+    const dC=dernieres(res[2],"Arable land (% of land area)");
+    Object.keys(dC).forEach(function(n){ CUL[n]=dC[n].v; });
+  }
+
+  const f=topojson.feature(w,w.objects.countries).features
+    .filter(d=>d.properties.name!=="Antarctica");
+  pays=svg.selectAll("path.p").data(f).join("path").attr("class","p")
+    .attr("d",geo).attr("stroke","#FBFCFA").attr("stroke-width",.5);
+  pays.on("mousemove",function(ev,d){ montreTip(ev,d.properties.name); })
+      .on("mouseleave",function(){ d3.select("#tip").classed("on",false); });
+  svg.selectAll("path.h").data(f.filter(d=>EST[d.properties.name]?.[1]==="F"))
+    .join("path").attr("class","h").attr("d",geo)
+    .attr("fill","url(#hatch)").attr("stroke","none").style("pointer-events","none");
+  maj();
+});
+
+// Graph - co2 du coup ?
+const cw=340,ch=190,m={t:8,r:8,b:22,l:40};
+const csvg=d3.select("#chart").append("svg")
+  .attr("viewBox",`0 0 ${cw} ${ch}`).attr("width","100%")
+  .attr("role","img").attr("aria-label","Carbone cumulé");
+const x=d3.scaleLinear([AN0,AN1],[m.l,cw-m.r]);
+const y=d3.scaleLinear([0,700],[ch-m.b,m.t]);
+csvg.append("g").attr("transform",`translate(0,${ch-m.b})`)
+  .call(d3.axisBottom(x).tickFormat(d3.format("d")).ticks(4).tickSizeOuter(0))
+  .call(g=>g.selectAll("text").attr("fill","#8A9A90").style("font-size","10px"))
+  .call(g=>g.selectAll("line,path").attr("stroke","#DCE2DA"));
+const gy=csvg.append("g").attr("transform",`translate(${m.l},0)`);
+const aireSeq=csvg.append("path").attr("fill","#4E9B3E").attr("opacity",.85);
+const aireEvi=csvg.append("path").attr("fill","#3A7BC8").attr("opacity",.85);
+const trait=csvg.append("line").attr("stroke","#14211A").attr("stroke-width",1.2)
+  .attr("y1",m.t).attr("y2",ch-m.b);
+
+// Progression de la transition
+function avancement(t,amb){
+  return Math.min(1,Math.max(0,(t-AN0)/(FIN_TRANSITION-AN0)))*amb;
+}
+// Calcul maturité
+function maturite(t,amb,tau){
+  let num=0,den=0;
+  for(let y=AN0+1;y<=t;y++){
+    const d=avancement(y,amb)-avancement(y-1,amb);
+    if(d>0){ num+=d*(1-Math.exp(-(t-y)/tau)); den+=d; }
+  }
+  return den>0?num/den:0;
+}
+function serie(amb,total,tau){
+  const s=[];let cumEvi=0;
+  for(let t=AN0;t<=AN1;t++){
+    cumEvi+=CO2_ELEVAGE*avancement(t,amb);
+    s.push({t,evi:cumEvi,seq:avancement(t,amb)*total*maturite(t,amb,tau)});
+  }
+  return s;
+}
+
+// Infobulle
+let tipPays=null, tipXY={x:0,y:0};
+
+function ligne(label,valeur,fort){
+  return '<div class="r'+(fort?" hi":"")+'"><span>'+label+'</span><b>'+valeur+'</b></div>';
+}
+
+function montreTip(ev,nom){
+  tipPays=nom;
+  if(ev){ tipXY={x:ev.clientX,y:ev.clientY}; }
+  const tip=d3.select("#tip");
+  const pat=PAT[nom];
+
+  if(pat===undefined){
+    tip.html('<h3>'+(FR[nom]||nom)+'</h3><div class="foot">Pas de donnée FAOSTAT</div>');
+  } else {
+    const an =+d3.select("#annee").property("value");
+    const amb=+d3.select("#ambition").property("value")/100;
+    const sc =SCEN[iScen];
+    const e  =EST[nom]||[null,"F"];
+    const av =avancement(an,amb);
+    const m  =maturite(an,amb,e[1]==="F"?sc.tau:TAU_PRAIRIE);
+
+    const libere =pat*av;              // % du territoire rendu à la nature
+    const restant=pat-libere;          // % encore pâturé
+    const cul    =CUL[nom];            // % en cultures : ne disparaît pas
+    const agri   =cul!==undefined ? restant+cul : null;
+
+    let h='<h3>'+(FR[nom]||nom)+'</h3>';
+    h+=ligne("Pâturages aujourd'hui", pat.toFixed(1)+" %");
+    if(cul!==undefined) h+=ligne("Cultures (maintenues)", cul.toFixed(1)+" %");
+    h+='<div class="foot" style="margin:6px 0 5px;border-top:none;padding:0">En '+an+'</div>';
+    h+=ligne("Rendu à la nature", libere.toFixed(1)+" %", true);
+    h+=ligne("Encore pâturé", restant.toFixed(1)+" %");
+    if(agri!==null) h+=ligne("Terres agricoles restantes", agri.toFixed(1)+" %");
+    h+=ligne("Maturité de la végétation", Math.round(m*100)+" %");
+    h+='<div class="foot">Devenir : '+(e[1]==="F"?"forêt":"prairie native")+
+       ' (estimation) · % du territoire · pâturages et cultures : FAOSTAT</div>';
+    tip.html(h);
+  }
+
+  
+  const n=tip.node(), r=n.getBoundingClientRect();
+  let x=tipXY.x+16, y=tipXY.y+16;
+  if(x+r.width  > innerWidth -8) x=tipXY.x-r.width -16;
+  if(y+r.height > innerHeight-8) y=tipXY.y-r.height-16;
+  tip.style("left",Math.max(8,x)+"px").style("top",Math.max(8,y)+"px").classed("on",true);
+}
+
+// Rafraîchit l'interface
+function maj(){
+  const an=+d3.select("#annee").property("value");
+  const amb=+d3.select("#ambition").property("value")/100;
+  const sc=SCEN[iScen];
+
+  d3.selectAll("input[type=range]").each(function(){
+    this.style.setProperty("--f",(this.value-this.min)/(this.max-this.min)*100+"%");
+  });
+  d3.select("#annee-out").text(an);
+  d3.select("#ambition-out").text(Math.round(amb*100)+" %");
+  const partAtteinte = sc.total>0 ? (avancement(an,amb)*sc.total*maturite(an,amb,sc.tau))/sc.total : 0;
+  d3.select("#scen-note").html(sc.note +
+    " <b>Atteint en " + an + " : " + Math.round(partAtteinte*100) + " %</b>");
+  d3.selectAll("#scen button").classed("on",function(){return +this.dataset.s===iScen});
+
+  const av=avancement(an,amb);
+  const mF=maturite(an,amb,sc.tau);       // forêt : lente
+  const mG=maturite(an,amb,TAU_PRAIRIE);  // prairie : rapide
+
+  if(pays){
+    pays.attr("fill",d=>{
+      const pat=PAT[d.properties.name];
+      if(pat===undefined) return NODATA;
+      const t=(EST[d.properties.name]||[0,"F"])[1];
+      const m=t==="F"?mF:mG;
+      return couleur(pat,av*.5+av*m*.5);
+    });
+    if(tipPays) montreTip(null,tipPays);   // rafraîchit si le curseur est posé
+  }
+
+  d3.select("#eau-val").html((EAU_MAX*av).toFixed(0)+"&nbsp;%");
+  d3.select("#bulle").style("transform",`scale(${0.72+av*0.28})`);
+
+  const s=serie(amb,sc.total,sc.tau);
+  y.domain([0,Math.max(60,d3.max(s,d=>d.evi+d.seq)*1.08)]);
+  gy.call(d3.axisLeft(y).ticks(4).tickFormat(d=>d+" Gt").tickSizeOuter(0))
+    .call(g=>g.selectAll("text").attr("fill","#8A9A90").style("font-size","10px"))
+    .call(g=>g.selectAll("line,path").attr("stroke","#DCE2DA"));
+
+  const vus=s.filter(d=>d.t<=an);
+  aireEvi.attr("d",d3.area().x(d=>x(d.t)).y0(y(0)).y1(d=>y(d.evi)).curve(d3.curveMonotoneX)(vus));
+  aireSeq.attr("d",d3.area().x(d=>x(d.t)).y0(d=>y(d.evi)).y1(d=>y(d.evi+d.seq)).curve(d3.curveMonotoneX)(vus));
+  trait.attr("x1",x(an)).attr("x2",x(an));
+
+  const cur=s[an-AN0];
+  d3.select("#c-evite").text(Math.round(cur.evi)+" Gt");
+  d3.select("#c-seq").text(Math.round(cur.seq)+" Gt");
+}
+
+d3.selectAll("#annee,#ambition").on("input",maj);
+d3.selectAll("#scen button").on("click",function(){iScen=+this.dataset.s;maj()});
+
+let anim=null;
+d3.select("#play").on("click",function(){
+  const b=d3.select(this);
+  if(anim){clearInterval(anim);anim=null;b.text("Lancer");return;}
+  b.text("Pause");
+  const el=document.getElementById("annee");
+  if(+el.value>=AN1) el.value=AN0;
+  anim=setInterval(()=>{
+    if(+el.value>=AN1){clearInterval(anim);anim=null;b.text("Rejouer");return;}
+    el.value=+el.value+1;maj();
+  },60);
+});
+maj();
+</script>
+</body>
+</html>
